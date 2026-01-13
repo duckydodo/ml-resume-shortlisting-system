@@ -1,25 +1,27 @@
 import pandas as pd
+
 from src.anonymizer import anonymize_text
-from src.matcher import compute_similarity
+from src.matcher import compute_similarity, fit_jd_vectorizer
 from src.scorer import compute_final_score
-from src.matcher import fit_jd_vectorizer
-from src.feature_extraction import extract_jd_skills, extract_resume_features
-
-
-
-
-
+from src.feature_extraction import (
+    extract_jd_skills,
+    extract_resume_features,
+)
 
 # --------------------------------------------------
-# CONFIG
+# Configuration
 # --------------------------------------------------
 
-CSV_PATH = "data/Resume.csv"   # adjust if filename differs
+CSV_PATH = "data/Resume.csv"
 JOB_DESCRIPTION_PATH = "data/job_descriptions/sample_jd.txt"
+OUTPUT_PATH = "output/shortlisted_candidates.csv"
 TOP_N = 10
 
+MAX_RESUME_CHARS = 3000  # truncate long resumes for speed
+
+
 # --------------------------------------------------
-# LOAD DATA
+# Load inputs
 # --------------------------------------------------
 
 df = pd.read_csv(CSV_PATH)
@@ -27,58 +29,59 @@ df = pd.read_csv(CSV_PATH)
 with open(JOB_DESCRIPTION_PATH, "r", encoding="utf-8") as f:
     job_description = f.read().lower()
 
+
 # --------------------------------------------------
-# PROCESS JOB DESCRIPTION
+# Prepare job description features
 # --------------------------------------------------
+
 fit_jd_vectorizer(job_description)
-jd_features = extract_jd_skills(job_description)
+jd_skills = extract_jd_skills(job_description)
+
+
+# --------------------------------------------------
+# Process resumes
+# --------------------------------------------------
 
 results = []
-
-# --------------------------------------------------
-# PROCESS RESUMES
-# --------------------------------------------------
 
 for _, row in df.iterrows():
     candidate_id = row["ID"]
 
-    # extract + anonymize resume
     raw_resume = str(row["Resume_str"])
     resume_text = anonymize_text(raw_resume).lower()
-    resume_text = resume_text[:3000]
+    resume_text = resume_text[:MAX_RESUME_CHARS]
 
-    # extract features
-    resume_features = extract_resume_features(resume_text, jd_features)
-
-
+    resume_features = extract_resume_features(
+        resume_text=resume_text,
+        jd_skills=jd_skills,
+    )
 
     similarity = compute_similarity(resume_text, job_description)
 
-    matched_skills = resume_features["matched_skills"]
-    missing_skills = resume_features["missing_skills"]
-
-    score = compute_final_score(
+    final_score = compute_final_score(
         similarity_score=similarity,
         skill_match_ratio=resume_features["skill_match_ratio"],
-        experience_years=resume_features["experience_years"]
+        experience_years=resume_features["experience_years"],
     )
-
 
     results.append({
         "candidate_id": candidate_id,
-        "score": round(score, 3),
+        "score": round(final_score, 3),
         "similarity": round(similarity, 3),
-        "matched_skills": matched_skills,
-        "missing_skills": missing_skills
+        "matched_skills": resume_features["matched_skills"],
+        "missing_skills": resume_features["missing_skills"],
     })
 
+
 # --------------------------------------------------
-# OUTPUT
+# Output results
 # --------------------------------------------------
 
-results_df = pd.DataFrame(results)
-results_df = results_df.sort_values(by="score", ascending=False)
+results_df = (
+    pd.DataFrame(results)
+      .sort_values(by="score", ascending=False)
+)
 
-results_df.to_csv("output/shortlisted_candidates.csv", index=False)
+results_df.to_csv(OUTPUT_PATH, index=False)
 
 print(results_df.head(TOP_N))
