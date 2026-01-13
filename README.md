@@ -142,5 +142,5 @@ This project is intended for **educational and experimental purposes**. It shoul
 ## Author
 
 Chittaranjan Dutta  
-AI & Data Science
+
 
