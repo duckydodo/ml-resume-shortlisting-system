@@ -42,12 +42,12 @@ results = []
 for _, row in df.iterrows():
     candidate_id = row["ID"]
 
-    # 1️⃣ extract + anonymize resume
+    # extract + anonymize resume
     raw_resume = str(row["Resume_str"])
     resume_text = anonymize_text(raw_resume).lower()
     resume_text = resume_text[:3000]
 
-    # 2️⃣ extract features
+    # extract features
     resume_features = extract_resume_features(resume_text, jd_features)
 
 

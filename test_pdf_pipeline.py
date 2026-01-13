@@ -19,32 +19,32 @@ data analysis, statistics, and machine learning.
 # PIPELINE
 # --------------------------------------------------
 
-# 1️⃣ Parse resume
+# Parse resume
 raw_resume_text = extract_text(PDF_PATH)
 
-# 2️⃣ Anonymize
+# Anonymize
 resume_text = anonymize_text(raw_resume_text).lower()
 
 # Optional: cap size for speed
 resume_text = resume_text[:3000]
 
-# 3️⃣ Prepare JD
+# Prepare JD
 jd_text = anonymize_text(JOB_DESCRIPTION.lower())
 
-# 4️⃣ Extract JD skills ONCE
+# Extract JD skills ONCE
 jd_skills = extract_jd_skills(jd_text)
 print("JD SKILLS:", jd_skills)
 
-# 5️⃣ Fit TF-IDF ONCE
+# Fit TF-IDF ONCE
 fit_jd_vectorizer(jd_text)
 
-# 6️⃣ Resume features
+# Resume features
 resume_features = extract_resume_features(resume_text, jd_skills)
 
-# 7️⃣ Similarity
+# Similarity
 similarity = compute_similarity(resume_text, jd_text)
 
-# 8️⃣ Final score
+# Final score
 final_score = compute_final_score(
     similarity_score=similarity,
     skill_match_ratio=resume_features["skill_match_ratio"],

@@ -40,28 +40,28 @@ if st.button("Score Resume"):
     else:
         with st.spinner("Analyzing resume..."):
 
-            # 1️⃣ Parse resume
+            # Parse resume
             raw_resume_text = extract_text(uploaded_file)
 
-            # 2️⃣ Anonymize + normalize
+            # Anonymize + normalize
             resume_text = anonymize_text(raw_resume_text).lower()
             resume_text = resume_text[:3000]  # speed safeguard
 
             jd_text = anonymize_text(job_description.lower())
 
-            # 3️⃣ Extract JD skills ONCE
+            # Extract JD skills ONCE
             jd_skills = extract_jd_skills(jd_text)
 
-            # 4️⃣ Fit TF-IDF ONCE
+            # Fit TF-IDF ONCE
             fit_jd_vectorizer(jd_text)
 
-            # 5️⃣ Resume features
+            # Resume features
             resume_features = extract_resume_features(resume_text, jd_skills)
 
-            # 6️⃣ Similarity
+            # Similarity
             similarity = compute_similarity(resume_text, jd_text)
 
-            # 7️⃣ Final score
+            # Final score
             final_score = compute_final_score(
                 similarity_score=similarity,
                 skill_match_ratio=resume_features["skill_match_ratio"],
